@@ -1,0 +1,317 @@
+if game.PlaceId ~= 574407221 then
+    print("discord  901wia")
+    return
+end
+
+print("Loaded For Super Hero Tycoon")
+print("fuck you nemi")
+
+local walkSpeed = 40
+local myTycoon = nil
+local lastTime = 0
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Name = "[901wia]"
+ScreenGui.DisplayOrder = 999
+
+local Button = Instance.new("TextButton", ScreenGui)
+local Corner = Instance.new("UICorner", Button)
+local Gradient = Instance.new("UIGradient", Button)
+local Stroke = Instance.new("UIStroke", Button)
+
+local colorRed = Color3.fromRGB(120, 10, 10)
+local colorGreen = Color3.fromRGB(20, 80, 20)
+
+Button.Size = UDim2.new(0, 110, 0, 40)
+Button.Position = UDim2.new(0, 20, 0, 20)
+Button.Text = "OFF"
+Button.TextColor3 = Color3.new(1, 1, 1)
+Button.Font = Enum.Font.GothamBold
+Button.TextSize = 16
+Button.AutoButtonColor = false
+Button.BackgroundColor3 = colorRed
+
+Corner.CornerRadius = UDim.new(0, 8)
+
+Stroke.Thickness = 2
+Stroke.Color = Color3.fromRGB(20, 20, 20)
+Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+Gradient.Rotation = 45
+Gradient.Color = ColorSequence.new(
+    Color3.new(1, 1, 1),
+    Color3.new(0.4, 0.4, 0.4)
+)
+
+local toggled = false
+local dragging = false
+local moved = false
+
+local dragStart
+local startPos
+
+local function setOn()
+    myTycoon = nil
+    lastTime = 0
+
+    Button.Text = "ON"
+    TweenService:Create(Button, TweenInfo.new(0.3), {
+        BackgroundColor3 = colorGreen
+    }):Play()
+end
+
+local function setOff()
+    Button.Text = "OFF"
+    TweenService:Create(Button, TweenInfo.new(0.3), {
+        BackgroundColor3 = colorRed
+    }):Play()
+end
+
+local function toggleState()
+    toggled = not toggled
+    if toggled then
+        setOn()
+    else
+        setOff()
+    end
+end
+
+local function findTycoon()
+    local tycoons = workspace:FindFirstChild("Tycoons")
+    if not tycoons then return end
+
+    for _, v in pairs(tycoons:GetChildren()) do
+        local owner = v:FindFirstChild("Owner")
+        if owner and tostring(owner.Value) == LocalPlayer.Name then
+            myTycoon = v
+            break
+        end
+    end
+end
+
+local function activeLoop()
+    pcall(function()
+        local char = LocalPlayer.Character
+        local humanoid = char and char:FindFirstChild("Humanoid")
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+        if humanoid then
+            humanoid.WalkSpeed = walkSpeed
+        end
+
+        if not hrp then return end
+
+        -- Disable other tycoon doors
+        local tycoons = workspace:FindFirstChild("Tycoons")
+        if tycoons then
+            for _, v in pairs(tycoons:GetChildren()) do
+                local owner = v:FindFirstChild("Owner")
+                if owner and tostring(owner.Value) ~= LocalPlayer.Name then
+                    local constructs = v:FindFirstChild("Constructs")
+                    if constructs then
+                        local door = constructs:FindFirstChild("SecurityDoor")
+                        local part = door and door:FindFirstChild("1")
+
+                        if part and part:FindFirstChild("Toggle") then
+                            local sensors = part:FindFirstChild("Sensors")
+                            if sensors then
+                                sensors:Destroy()
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        local crates = workspace:FindFirstChild("CratesCache")
+        if crates then
+            for _, v in pairs(crates:GetChildren()) do
+                local primary = v:FindFirstChild("Primary")
+                if primary then
+                    firetouchinterest(hrp, primary, 0)
+                    firetouchinterest(hrp, primary, 1)
+                end
+            end
+        end
+
+        for _, gui in pairs(LocalPlayer.PlayerGui:GetChildren()) do
+            local frame = gui:FindFirstChild("Frame")
+            local skipBtn = frame and frame:FindFirstChild("Skip")
+                and frame.Skip:FindFirstChild("Button")
+
+            if skipBtn then
+                for _, eventName in ipairs({
+                    "MouseButton1Click",
+                    "MouseButton1Down",
+                    "Activated"
+                }) do
+                    for _, con in pairs(getconnections(skipBtn[eventName])) do
+                        con:Fire()
+                    end
+                end
+            end
+        end
+
+        if not myTycoon then
+            findTycoon()
+            return
+        end
+
+        local extras = myTycoon:FindFirstChild("Extras")
+        if extras then
+        
+            local ignoredBase = extras:FindFirstChild("IgnoredBase")
+            if ignoredBase and ignoredBase:FindFirstChild("1stFloorClickToEarn") then
+                local clicker = ignoredBase["1stFloorClickToEarn"]:FindFirstChild("clicker")
+                local detector = clicker and clicker:FindFirstChildOfClass("ClickDetector")
+                if detector then
+                    fireclickdetector(detector)
+                end
+            end
+
+            local collector = extras:FindFirstChild("Collector")
+            if collector then
+                local pad = collector:FindFirstChild("Pad")
+                local amount = collector:FindFirstChild("Display")
+                    and collector.Display:FindFirstChild("Interface")
+                    and collector.Display.Interface:FindFirstChild("Amount")
+
+                if pad and amount and amount.ContentText ~= "$0" then
+                    firetouchinterest(hrp, pad, 0)
+                    firetouchinterest(hrp, pad, 1)
+                end
+            end
+        end
+
+        local constructs = myTycoon:FindFirstChild("Constructs")
+        if constructs and constructs:FindFirstChild("Base") then
+            local baseParts = constructs.Base:GetChildren()
+            local target = baseParts[25]
+
+            if target and target:FindFirstChild("Drop0") then
+                local drop = target.Drop0
+                local detector = drop:FindFirstChild("clicker")
+                    and drop.clicker:FindFirstChildOfClass("ClickDetector")
+
+                if detector then
+                    fireclickdetector(detector)
+                end
+            end
+        end
+
+        local now = tick()
+        if now - lastTime >= 0.1 then
+            lastTime = now
+
+            local buttons = myTycoon:FindFirstChild("Buttons")
+            if not buttons then return end
+
+            local red = Color3.fromRGB(196, 40, 28)
+
+            local hasDropper = false
+            local hasUpgrader = false
+
+            for _, b in pairs(buttons:GetChildren()) do
+                local name = b.Name:lower()
+
+                if b:FindFirstChild("Configuration")
+                    and b.Configuration:FindFirstChild("Price") then
+
+                    if name:find("dropper") then
+                        hasDropper = true
+                    elseif name:find("upgrader") then
+                        hasUpgrader = true
+                    end
+                end
+            end
+
+            for _, b in pairs(buttons:GetChildren()) do
+                if b:FindFirstChild("Configuration")
+                    and b.Configuration:FindFirstChild("Price") then
+
+                    local name = b.Name:lower()
+                    local touchPart =
+                        b:IsA("BasePart") and b
+                        or b:FindFirstChild("Head")
+                        or b:FindFirstChildWhichIsA("BasePart")
+
+                    if touchPart and touchPart.Color ~= red then
+                        local canBuy = true
+
+                        if hasDropper then
+                            canBuy = name:find("dropper")
+                        elseif hasUpgrader then
+                            canBuy = name:find("upgrader")
+                        end
+
+                        if canBuy then
+                            firetouchinterest(hrp, touchPart, 0)
+                            firetouchinterest(hrp, touchPart, 1)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+Button.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        moved = false
+        dragStart = input.Position
+        startPos = Button.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        local delta = input.Position - dragStart
+
+        if delta.Magnitude > 5 then
+            moved = true
+        end
+
+        TweenService:Create(Button, TweenInfo.new(0.15), {
+            Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        }):Play()
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        if dragging then
+            dragging = false
+
+            if not moved then
+                toggleState()
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if toggled then
+        activeLoop()
+    end
+end)
