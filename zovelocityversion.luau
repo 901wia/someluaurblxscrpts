@@ -1,1 +1,1 @@
-game.Players.LocalPlayer:kick("An Error Occurred. Please Rejoin!")
+game.Players.LocalPlayer:kick("[KICKED] Unauthorized client modification detected.")
