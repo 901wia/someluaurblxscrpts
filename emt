@@ -2048,7 +2048,7 @@ task.spawn(function()
 end)
 
 if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/OpenEmote.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/901wia/someluaurblxscrpts/refs/heads/main/UIS"))()
     getgenv().Notify({
         Title = 'wia | Emote Mobile',
         Content = '📱 Added emote open button for ease of use',
